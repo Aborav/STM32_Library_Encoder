@@ -13,7 +13,7 @@
  *@brief interrupt handler for a CLICK
  *@param encoder structure prototype pointer
  */
-void MENC_ClickHandlerIRQ(struct menc_struct_type *m) {
+void MENC_ClickHandlerIRQ(menc_struct_type *m) {
 	if (MENC_KEY_STATE(m->key_port, m->key_pin)) {
 		MENC_SET_FLAG(m->flags, MENC_SF_CLICK);
 #ifdef MENC_USE_CLICK_DEB
@@ -29,7 +29,7 @@ void MENC_ClickHandlerIRQ(struct menc_struct_type *m) {
  * @brief interrupt handler for a TURN
  * @param encoder struct prototype pointer
  */
-void MENC_TurnHandlerIRQ(struct menc_struct_type *m) {
+void MENC_TurnHandlerIRQ(menc_struct_type *m) {
 #ifdef MENC_USE_TURN_DEB
 	DISABLE_TURN_IRQ(m->s1_exti_line); //for debounce
 #endif
@@ -121,6 +121,10 @@ void MENC_TurnHandlerIRQ(struct menc_struct_type *m) {
 	}
 #endif
 
+#ifdef MENC_USE_ANY_TURN
+			MENC_SET_FLAG(m->flags,MENC_AF_ANY_TURN);
+#endif
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,14 +134,14 @@ void MENC_TurnHandlerIRQ(struct menc_struct_type *m) {
  * @param encoder struct prototype pointer
  */
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void MENC_MainHandler(struct menc_struct_type *m) {
+void MENC_MainHandler(menc_struct_type *m) {
 
 //Polling
 	if (MENC_TICK_SOURCE() - m->enc_poll_tmr >= MENC_POLL_FREQ) {
 		m->enc_poll_tmr = MENC_TICK_SOURCE();
 
 //TURN DEBOUNCE
-#ifdef MENC_USE_DEB
+#ifdef MENC_USE_TURN_DEB
 /*main problem is in polling frequency
  I need to poll every 1 ms because timing between turns
  during fast rotation can be up to 4 ms
@@ -216,6 +220,9 @@ void MENC_MainHandler(struct menc_struct_type *m) {
 			m->prev_turn = m->curr_turn;
 		}
 #endif
+
+
+
 	}
 
 }
@@ -223,7 +230,7 @@ void MENC_MainHandler(struct menc_struct_type *m) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-bool MENC_TurnRight(struct menc_struct_type *m) {
+bool MENC_TurnRight(menc_struct_type *m) {
 #ifdef MENC_USE_RISE_EDGE_IRQ_FOR_TURN
 	if (MENC_READ_FLAG(m->flags, MENC_AF_TURN_RIGHT)) {
 		MENC_CLEAR_FLAG(m->flags, MENC_AF_TURN_RIGHT);
@@ -241,7 +248,7 @@ bool MENC_TurnRight(struct menc_struct_type *m) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-bool MENC_TurnLeft(struct menc_struct_type *m) {
+bool MENC_TurnLeft(menc_struct_type *m) {
 #ifdef MENC_USE_RISE_EDGE_IRQ_FOR_TURN
 	if (MENC_READ_FLAG(m->flags, MENC_AF_TURN_LEFT)) {
 		MENC_CLEAR_FLAG(m->flags, MENC_AF_TURN_LEFT);
@@ -259,7 +266,18 @@ bool MENC_TurnLeft(struct menc_struct_type *m) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-bool MENC_Click(struct menc_struct_type *m) {
+bool MENC_AnyTurn(menc_struct_type *m) {
+	if(MENC_READ_FLAG(m->flags,MENC_AF_ANY_TURN)){
+		MENC_CLEAR_FLAG(m->flags,MENC_AF_ANY_TURN);
+		return 1;
+	} else {
+		return 0;
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////
+bool MENC_Click(menc_struct_type *m) {
 	if (MENC_READ_FLAG(m->flags, MENC_AF_CLICK)) {
 		MENC_CLEAR_FLAG(m->flags, MENC_AF_CLICK);
 #ifdef MENC_USE_FALL_RISE_EDGE_IRQ_FOR_TURN
@@ -270,14 +288,14 @@ bool MENC_Click(struct menc_struct_type *m) {
 		return 0;
 }
 
-bool MENC_Hold(struct menc_struct_type *m) {
+bool MENC_Hold(menc_struct_type *m) {
 	return MENC_READ_FLAG(m->flags, MENC_AF_HOLD);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef MENC_USE_HOLD_TURN
-bool MENC_HoldTurnLeft(struct menc_struct_type *m) {
+bool MENC_HoldTurnLeft(menc_struct_type *m) {
 	if (MENC_READ_FLAG(m->flags,MENC_AF_HOLD_TURN_LEFT)) {
 		MENC_CLEAR_FLAG(m->flags,MENC_AF_HOLD_TURN_LEFT);
 		return 1;
@@ -286,7 +304,7 @@ bool MENC_HoldTurnLeft(struct menc_struct_type *m) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-bool MENC_HoldTurnRight(struct menc_struct_type *m) {
+bool MENC_HoldTurnRight(menc_struct_type *m) {
 	if (MENC_READ_FLAG(m->flags,MENC_AF_HOLD_TURN_RIGHT)) {
 		MENC_CLEAR_FLAG(m->flags,MENC_AF_HOLD_TURN_RIGHT);
 		return 1;
@@ -297,7 +315,7 @@ bool MENC_HoldTurnRight(struct menc_struct_type *m) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef MENC_USE_FAST_TURN
-bool MENC_TurnFastLeft(struct menc_struct_type *m) {
+bool MENC_TurnFastLeft(menc_struct_type *m) {
 	if (MENC_READ_FLAG(m->flags, MENC_AF_TURN_FAST_LEFT)) {
 		MENC_CLEAR_FLAG(m->flags, MENC_AF_TURN_FAST_LEFT);
 		return 1;
@@ -307,7 +325,7 @@ bool MENC_TurnFastLeft(struct menc_struct_type *m) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-bool MENC_TurnFastRight(struct menc_struct_type *m) {
+bool MENC_TurnFastRight(menc_struct_type *m) {
 	if (MENC_READ_FLAG(m->flags, MENC_AF_TURN_FAST_RIGHT)) {
 		MENC_CLEAR_FLAG(m->flags, MENC_AF_TURN_FAST_RIGHT);
 		return 1;

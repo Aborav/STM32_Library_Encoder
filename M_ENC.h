@@ -85,6 +85,7 @@ M_ENC.H
 ////////////////////////////////////////////
 //#define MENC_USE_HOLD_TURN //if you need turn while hold action
 //#define MENC_USE_FAST_TURN //if you need fast turn action
+#define MENC_USE_ANY_TURN //if you need turn at any side flag
 
 
 //Debounce
@@ -109,6 +110,8 @@ M_ENC.H
 
 //Status flags
 //////////////////////////////////////////////////////////////////////////
+//volatile uint16_t flags: 1 << flag code
+
 //Action flags
 #define MENC_AF_TURN_RIGHT 0
 #define MENC_AF_TURN_LEFT 1
@@ -118,16 +121,14 @@ M_ENC.H
 #define MENC_AF_TURN_FAST_LEFT 5
 #define MENC_AF_CLICK 6
 #define MENC_AF_HOLD 7
+#define MENC_AF_ANY_TURN 8
 
 //Service flags
-#define MENC_SF_TURN_STOP 8
-#define MENC_SF_CLICK_STOP 9
-#define MENC_SF_CLICK 10
-#define MENC_SF_TURN_FAST_RIGHT 11
-#define MENC_SF_TURN_FAST_LEFT 12
-#define MENC_SF_TURN_DEB_START 13
-#define MENC_SF_TURN_LEFT 14
-#define MENC_SF_TURN_RIGHT 15
+#define MENC_SF_TURN_STOP 9
+#define MENC_SF_CLICK_STOP 10
+#define MENC_SF_CLICK 11
+#define MENC_SF_TURN_FAST_RIGHT 12
+#define MENC_SF_TURN_FAST_LEFT 13
 
 
 //Read pins
@@ -149,7 +150,10 @@ M_ENC.H
 #define DISABLE_TURN_IRQ(x) NVIC_DisableIRQ(x)
 
 
-//Service defines
+//Service defines//Variables
+///////////////////////////////////////////////////////
+//extern uint16_t ina_calib_val;//calibration value
+///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 #define MENC_SET_FLAG(flags,shift) (flags)|=(1<<(shift))
 #define MENC_CLEAR_FLAG(flags,shift) (flags)&=~(1<<(shift))
@@ -158,7 +162,7 @@ M_ENC.H
 
 //Init structure
 //////////////////////////////////////////////////////////////////
-struct menc_struct_type {
+typedef struct __menc_struct_type {
 	uint16_t s1_pin;
 	uint16_t s2_pin;
 	uint16_t key_pin;
@@ -177,7 +181,7 @@ struct menc_struct_type {
 	uint16_t prev_turn;
 	uint16_t curr_turn;
 #endif
-};
+} menc_struct_type;
  //////////////////////////////////////////////////////////////////////////
 
 
@@ -185,24 +189,25 @@ struct menc_struct_type {
 
 //Functions
 //////////////////////////////////////////////////////////////////////////
-void MENC_MainHandler(struct menc_struct_type *m);
+void MENC_MainHandler(menc_struct_type *m);
 
-void MENC_TurnHandlerIRQ(struct menc_struct_type *m);
-void MENC_ClickHandlerIRQ(struct menc_struct_type *m);
+void MENC_TurnHandlerIRQ(menc_struct_type *m);
+void MENC_ClickHandlerIRQ(menc_struct_type *m);
 
-bool MENC_TurnLeft(struct menc_struct_type *m);
-bool MENC_TurnRight(struct menc_struct_type *m);
-bool MENC_Click(struct menc_struct_type *m);
-bool MENC_Hold(struct menc_struct_type *m);
+bool MENC_TurnLeft(menc_struct_type *m);
+bool MENC_TurnRight(menc_struct_type *m);
+bool MENC_AnyTurn(menc_struct_type *m);
+bool MENC_Click(menc_struct_type *m);
+bool MENC_Hold(menc_struct_type *m);
 
 #ifdef MENC_USE_HOLD_TURN	
-  bool MENC_HoldTurnLeft(struct menc_struct_type *m);
-  bool MENC_HoldTurnRight(struct menc_struct_type *m);
+  bool MENC_HoldTurnLeft(menc_struct_type *m);
+  bool MENC_HoldTurnRight(menc_struct_type *m);
 #endif
 
 #ifdef MENC_USE_FAST_TURN
-  bool MENC_TurnFastLeft(struct menc_struct_type *m);
-  bool MENC_TurnFastRight(struct menc_struct_type *m);
+  bool MENC_TurnFastLeft(menc_struct_type *m);
+  bool MENC_TurnFastRight(menc_struct_type *m);
 #endif
 //////////////////////////////////////////////////////////////////////////
 #endif
